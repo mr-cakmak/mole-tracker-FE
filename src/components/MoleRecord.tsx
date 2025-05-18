@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { formatDistanceToNow } from 'date-fns';
 import { MoleRecord as MoleRecordType } from '@/lib/store';
 import { getPredictionLabel, isConfident } from '@/lib/api';
+import Image from 'next/image';
 
 interface MoleRecordProps {
   record: MoleRecordType;
@@ -43,11 +44,14 @@ export function MoleRecord({ record, onClick }: MoleRecordProps) {
     >
       <CardContent className="p-4">
         <div className="flex gap-4">
-          <div className="w-24 h-24 rounded-md overflow-hidden flex-shrink-0">
-            <img 
+          <div className="w-24 h-24 rounded-md overflow-hidden flex-shrink-0 relative">
+            <Image 
               src={record.image} 
               alt="Mole" 
-              className="w-full h-full object-cover"
+              className="object-cover"
+              fill
+              sizes="96px"
+              unoptimized
             />
           </div>
           

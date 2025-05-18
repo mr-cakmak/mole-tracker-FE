@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PredictionResult } from '@/components/PredictionResult';
 import { useMoleStore } from '@/lib/store';
 import { formatDistanceToNow } from 'date-fns';
+import Image from 'next/image';
 
 export default function RecordPage() {
   const params = useParams();
@@ -23,7 +24,7 @@ export default function RecordPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <h1 className="text-xl font-semibold mb-4">Record not found</h1>
-        <p className="text-gray-600 mb-6">The record you're looking for doesn't exist or has been removed.</p>
+        <p className="text-gray-600 mb-6">The record you&apos;re looking for doesn&apos;t exist or has been removed.</p>
         <Button onClick={() => router.push('/')}>
           Back to Home
         </Button>
@@ -48,10 +49,13 @@ export default function RecordPage() {
         </div>
         
         <div className="w-full aspect-[4/3] bg-black rounded-lg mb-6 overflow-hidden">
-          <img 
+          <Image 
             src={record.image} 
             alt="Mole" 
             className="w-full h-full object-cover"
+            width={400}
+            height={300}
+            unoptimized
           />
         </div>
         

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { PredictionResult } from '@/components/PredictionResult';
 import { getPrediction } from '@/lib/api';
 import { useMoleStore, type Mole, type MoleRecord } from '@/lib/store';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 export default function AddMolePage() {
   const searchParams = useSearchParams();
@@ -117,10 +118,13 @@ export default function AddMolePage() {
         {capturedImage ? (
           <>
             <div className="w-full aspect-[4/3] bg-black rounded-lg mb-4 overflow-hidden">
-              <img 
+              <Image 
                 src={capturedImage} 
                 alt="Captured mole" 
                 className="w-full h-full object-cover"
+                width={400}
+                height={300}
+                unoptimized
               />
             </div>
             

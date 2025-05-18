@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { MoleRecord } from '@/components/MoleRecord';
 import { useMoleStore } from '@/lib/store';
-import { toast } from 'sonner';
 
 export default function MoleProcessPage() {
   const params = useParams();
@@ -20,7 +19,7 @@ export default function MoleProcessPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <h1 className="text-xl font-semibold mb-4">Mole not found</h1>
-        <p className="text-gray-600 mb-6">The mole you're looking for doesn't exist or has been removed.</p>
+        <p className="text-gray-600 mb-6">The mole you&apos;re looking for doesn&apos;t exist or has been removed.</p>
         <Button onClick={() => router.push('/')}>
           Back to Home
         </Button>

@@ -3,12 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { Button } from '@/components/ui/button';
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { useMoleStore, type MoleLocation, type Mole } from '@/lib/store';
+import { useMoleStore, type Mole } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
