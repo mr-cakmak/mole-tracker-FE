@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCamera } from '@/lib/camera';
 import { captureImage } from '@/lib/api';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 
 interface CameraViewProps {
   onImageCapture: (imageData: string) => void;
@@ -20,6 +20,7 @@ export function CameraView({ onImageCapture }: CameraViewProps) {
     requestCameraPermission,
   } = useCamera();
   const [isCameraReady, setIsCameraReady] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     requestCameraPermission();
@@ -40,12 +41,28 @@ export function CameraView({ onImageCapture }: CameraViewProps) {
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      onImageCapture(result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <Card className="w-full bg-gray-50">
       <CardContent className="p-4">
         <div className="flex flex-col items-center gap-4">
           {isLoading ? (
-            <div className="flex items-center justify-center h-60 w-full">
+            <div className="flex flex-col items-center justify-center h-60 w-full">
               <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
               <span className="ml-2 text-gray-500">Loading camera...</span>
             </div>
@@ -54,9 +71,25 @@ export function CameraView({ onImageCapture }: CameraViewProps) {
               <div className="text-red-500 mb-4">
                 {error || "Camera permission denied"}
               </div>
-              <Button onClick={requestCameraPermission}>
-                Try Again
-              </Button>
+              <div className="flex flex-col gap-2 w-full">
+                <Button onClick={requestCameraPermission} className="mb-2">
+                  Try Again with Camera
+                </Button>
+                
+                <p className="text-sm text-gray-500 my-2">Or</p>
+                
+                <Button onClick={triggerFileUpload} variant="outline">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Image Instead
+                </Button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleFileUpload}
+                />
+              </div>
             </div>
           ) : (
             <>
@@ -75,14 +108,35 @@ export function CameraView({ onImageCapture }: CameraViewProps) {
                 </div>
               </div>
               
-              <Button 
-                className="w-full mt-4" 
-                size="lg"
-                disabled={!isCameraReady}
-                onClick={handleCapture}
-              >
-                Capture Image
-              </Button>
+              <div className="w-full flex flex-col gap-2">
+                <Button 
+                  className="w-full" 
+                  size="lg"
+                  disabled={!isCameraReady}
+                  onClick={handleCapture}
+                >
+                  Capture Image
+                </Button>
+                
+                <p className="text-xs text-center text-gray-500 my-1">or</p>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={triggerFileUpload}
+                  className="w-full"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload from Gallery
+                </Button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleFileUpload}
+                />
+              </div>
             </>
           )}
         </div>
