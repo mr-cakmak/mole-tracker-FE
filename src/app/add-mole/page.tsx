@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { CameraView } from '@/components/CameraView';
 import { PredictionResult } from '@/components/PredictionResult';
@@ -11,7 +10,7 @@ import { getPrediction } from '@/lib/api';
 import { useMoleStore, type Mole, type MoleRecord } from '@/lib/store';
 import { toast } from 'sonner';
 
-function AddMolePageContent() {
+export default function AddMolePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { addMole, addMoleRecord, getMoleByLocation } = useMoleStore();
@@ -118,14 +117,11 @@ function AddMolePageContent() {
         {capturedImage ? (
           <>
             <div className="w-full aspect-[4/3] bg-black rounded-lg mb-4 overflow-hidden">
-              <div className="relative w-full h-full">
-                <Image 
-                  src={capturedImage} 
-                  alt="Captured mole" 
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              <img 
+                src={capturedImage} 
+                alt="Captured mole" 
+                className="w-full h-full object-cover"
+              />
             </div>
             
             <div className="flex justify-between gap-4 mb-6">
@@ -177,13 +173,5 @@ function AddMolePageContent() {
         )}
       </div>
     </div>
-  );
-}
-
-export default function AddMolePage() {
-  return (
-    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading...</div>}>
-      <AddMolePageContent />
-    </Suspense>
   );
 } 

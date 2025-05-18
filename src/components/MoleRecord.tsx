@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatDistanceToNow } from 'date-fns';
 import { MoleRecord as MoleRecordType } from '@/lib/store';
@@ -44,12 +43,11 @@ export function MoleRecord({ record, onClick }: MoleRecordProps) {
     >
       <CardContent className="p-4">
         <div className="flex gap-4">
-          <div className="w-24 h-24 rounded-md overflow-hidden flex-shrink-0 relative">
-            <Image 
+          <div className="w-24 h-24 rounded-md overflow-hidden flex-shrink-0">
+            <img 
               src={record.image} 
               alt="Mole" 
-              fill
-              className="object-cover"
+              className="w-full h-full object-cover"
             />
           </div>
           
