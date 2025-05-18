@@ -67,25 +67,74 @@ export const getPrediction = async (imageBase64: string): Promise<PredictionResp
 
 export const captureImage = async (videoRef: React.RefObject<HTMLVideoElement | null>): Promise<string> => {
   return new Promise((resolve, reject) => {
-    const video = videoRef.current;
-    if (!video) {
-      reject(new Error('Video element not found'));
-      return;
-    }
+    try {
+      const video = videoRef.current;
+      if (!video) {
+        console.error('Video element not found');
+        reject(new Error('Video element not found'));
+        return;
+      }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      reject(new Error('Could not get canvas context'));
-      return;
+      // Check if video has valid dimensions
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+      
+      console.log('Video dimensions:', videoWidth, 'x', videoHeight);
+      
+      if (videoWidth === 0 || videoHeight === 0) {
+        console.error('Video dimensions are invalid (0x0)');
+        reject(new Error('Cannot capture from video stream with 0 dimensions'));
+        return;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = videoWidth;
+      canvas.height = videoHeight;
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        console.error('Could not get canvas context');
+        reject(new Error('Could not get canvas context'));
+        return;
+      }
+      
+      // Try to capture the frame
+      try {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Try to get data URL
+        try {
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          console.log('Successfully captured image');
+          resolve(dataUrl);
+        } catch (toDataUrlError) {
+          console.error('Error converting to data URL:', toDataUrlError);
+          
+          // Fallback to blob
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error('Failed to create blob from canvas'));
+              return;
+            }
+            
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const base64data = reader.result as string;
+              resolve(base64data);
+            };
+            reader.onerror = () => {
+              reject(new Error('Error reading blob data'));
+            };
+            reader.readAsDataURL(blob);
+          }, 'image/jpeg', 0.8);
+        }
+      } catch (drawError) {
+        console.error('Error drawing to canvas:', drawError);
+        reject(new Error('Error drawing video to canvas, possibly due to security restrictions'));
+      }
+    } catch (error) {
+      console.error('Unexpected error in capture:', error);
+      reject(error);
     }
-    
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-    resolve(dataUrl);
   });
 }; 

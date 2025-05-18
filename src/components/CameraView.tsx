@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCamera } from '@/lib/camera';
 import { captureImage } from '@/lib/api';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, AlertCircle } from 'lucide-react';
 
 interface CameraViewProps {
   onImageCapture: (imageData: string) => void;
@@ -21,18 +21,27 @@ export function CameraView({ onImageCapture }: CameraViewProps) {
   } = useCamera();
   const [isCameraReady, setIsCameraReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [securityWarning, setSecurityWarning] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check if running on HTTPS (required for camera access)
+    if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+      setSecurityWarning('Camera may not work: This site needs to run on HTTPS for camera access.');
+      console.warn('Camera access requires HTTPS unless on localhost');
+    }
+    
     requestCameraPermission();
   }, [requestCameraPermission]);
 
   const handleVideoReady = () => {
+    console.log('Video is ready and can play');
     setIsCameraReady(true);
   };
 
   const handleCapture = async () => {
     try {
       if (videoRef.current) {
+        console.log('Capturing image from video element');
         const imageData = await captureImage(videoRef);
         onImageCapture(imageData);
       }
@@ -45,6 +54,7 @@ export function CameraView({ onImageCapture }: CameraViewProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    console.log('File selected:', file.name, file.type, file.size);
     const reader = new FileReader();
     reader.onloadend = () => {
       const result = reader.result as string;
@@ -60,6 +70,13 @@ export function CameraView({ onImageCapture }: CameraViewProps) {
   return (
     <Card className="w-full bg-gray-50">
       <CardContent className="p-4">
+        {securityWarning && (
+          <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded-md flex items-start">
+            <AlertCircle className="h-5 w-5 text-yellow-500 mr-2 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-yellow-700">{securityWarning}</p>
+          </div>
+        )}
+
         <div className="flex flex-col items-center gap-4">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-60 w-full">
@@ -71,6 +88,13 @@ export function CameraView({ onImageCapture }: CameraViewProps) {
               <div className="text-red-500 mb-4">
                 {error || "Camera permission denied"}
               </div>
+              
+              {(error && error.includes("not supported")) ? (
+                <div className="text-sm text-gray-600 mb-3">
+                  Your browser may not support camera access or is blocking it.
+                </div>
+              ) : null}
+              
               <div className="flex flex-col gap-2 w-full">
                 <Button onClick={requestCameraPermission} className="mb-2">
                   Try Again with Camera
@@ -115,7 +139,7 @@ export function CameraView({ onImageCapture }: CameraViewProps) {
                   disabled={!isCameraReady}
                   onClick={handleCapture}
                 >
-                  Capture Image
+                  {isCameraReady ? 'Capture Image' : 'Waiting for camera...'}
                 </Button>
                 
                 <p className="text-xs text-center text-gray-500 my-1">or</p>

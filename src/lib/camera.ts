@@ -19,13 +19,43 @@ export function useCamera() {
     }
 
     try {
-      // First try with environment camera (back camera on mobile)
+      // Try a simpler approach - request camera with basic options first
       try {
+        console.log('Attempting to access camera with basic constraints');
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+        
+        streamRef.current = stream;
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+        
+        setHasPermission(true);
+        console.log('Camera access successful with basic constraints');
+      } catch (basicError) {
+        console.error('Failed with basic constraints, trying with specific device access', basicError);
+        
+        // Get list of available devices
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        console.log('Available devices:', devices);
+        
+        // Find video input devices
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        console.log('Available video devices:', videoDevices);
+        
+        if (videoDevices.length === 0) {
+          throw new Error('No video devices found');
+        }
+        
+        // Try to use the last camera (usually the back camera on mobile)
+        const preferredCamera = videoDevices[videoDevices.length - 1].deviceId;
+        
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: { exact: 'environment' },
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
+            deviceId: preferredCamera
           }
         });
         
@@ -36,24 +66,10 @@ export function useCamera() {
         }
         
         setHasPermission(true);
-      } catch (envError) {
-        console.log('Could not access environment camera, trying default camera', envError);
-        
-        // Fallback to any available camera
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true
-        });
-        
-        streamRef.current = stream;
-        
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-        
-        setHasPermission(true);
+        console.log('Camera access successful with specific device ID');
       }
     } catch (err) {
-      console.error('Error accessing camera:', err);
+      console.error('All camera access attempts failed:', err);
       
       // More descriptive error messages
       if (err instanceof DOMException) {
