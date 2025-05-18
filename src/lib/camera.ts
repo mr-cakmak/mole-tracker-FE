@@ -18,19 +18,59 @@ export function useCamera() {
       return;
     }
 
+    // Mobile Safari and some Android browsers require user interaction
+    // before media can play. We'll set this flag to allow our UI to handle it.
+    const isMobileBrowser = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    console.log('Detected mobile browser:', isMobileBrowser);
+
     try {
+      // Try getting all video devices first to see what's available
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        console.log('Available video devices:', videoDevices.length);
+        videoDevices.forEach((device, i) => {
+          console.log(`Camera ${i+1}: ${device.label || 'unnamed camera'}`);
+        });
+      } catch (enumError) {
+        console.warn('Could not enumerate devices:', enumError);
+      }
+
       // Try a simpler approach - request camera with basic options first
       try {
         console.log('Attempting to access camera with basic constraints');
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false
+        
+        const constraints: MediaStreamConstraints = {
+          audio: false,
+          video: {
+            facingMode: 'user', // Try selfie mode first as it's more likely to work
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        };
+        
+        console.log('Using constraints:', JSON.stringify(constraints));
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        const videoTracks = stream.getVideoTracks();
+        console.log(`Got ${videoTracks.length} video tracks`);
+        videoTracks.forEach((track, i) => {
+          console.log(`Track ${i+1}:`, track.label, track.getSettings());
         });
         
         streamRef.current = stream;
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          
+          // For iOS compatibility, we need to manually call play()
+          try {
+            await videoRef.current.play();
+            console.log('Video.play() succeeded immediately');
+          } catch (playError) {
+            console.warn('Autoplay failed, will require user interaction', playError);
+            // We'll handle this in the UI by having the user tap to activate
+          }
         }
         
         setHasPermission(true);
@@ -59,10 +99,22 @@ export function useCamera() {
           }
         });
         
+        const videoTracks = stream.getVideoTracks();
+        console.log(`Got ${videoTracks.length} video tracks from specific device`);
+        
         streamRef.current = stream;
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          
+          // For iOS compatibility, we need to manually call play()
+          try {
+            await videoRef.current.play();
+            console.log('Video.play() succeeded immediately');
+          } catch (playError) {
+            console.warn('Autoplay failed, will require user interaction', playError);
+            // We'll handle this in the UI by having the user tap to activate
+          }
         }
         
         setHasPermission(true);

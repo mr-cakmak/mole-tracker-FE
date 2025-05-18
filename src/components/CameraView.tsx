@@ -22,6 +22,7 @@ export function CameraView({ onImageCapture }: CameraViewProps) {
   const [isCameraReady, setIsCameraReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [securityWarning, setSecurityWarning] = useState<string | null>(null);
+  const [videoStatus, setVideoStatus] = useState<string>('Initializing...');
 
   useEffect(() => {
     // Check if running on HTTPS (required for camera access)
@@ -33,9 +34,56 @@ export function CameraView({ onImageCapture }: CameraViewProps) {
     requestCameraPermission();
   }, [requestCameraPermission]);
 
+  useEffect(() => {
+    // Additional check for video element readiness
+    if (videoRef.current) {
+      const checkVideoStatus = () => {
+        const video = videoRef.current;
+        if (!video) return;
+        
+        const isVideoPlaying = !!(
+          video.currentTime > 0 && 
+          !video.paused && 
+          !video.ended && 
+          video.readyState > 2
+        );
+        
+        if (isVideoPlaying) {
+          console.log('Video is playing!', video.videoWidth, 'x', video.videoHeight);
+          setIsCameraReady(true);
+          setVideoStatus('Camera ready');
+        } else {
+          console.log('Video not playing yet. ReadyState:', video.readyState);
+          setVideoStatus(`Status: ${video.readyState}/4 (${getReadyStateText(video.readyState)})`);
+        }
+      };
+      
+      const interval = setInterval(checkVideoStatus, 500);
+      return () => clearInterval(interval);
+    }
+  }, [videoRef]);
+
+  const getReadyStateText = (state: number) => {
+    const states = [
+      'HAVE_NOTHING',
+      'HAVE_METADATA',
+      'HAVE_CURRENT_DATA',
+      'HAVE_FUTURE_DATA',
+      'HAVE_ENOUGH_DATA'
+    ];
+    return states[state] || 'Unknown';
+  };
+
   const handleVideoReady = () => {
-    console.log('Video is ready and can play');
+    console.log('Video canPlay event fired');
+    console.log('Video dimensions on canPlay:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
+    // We'll let the useEffect interval check handle the actual readiness state
+  };
+
+  const handleVideoPlaying = () => {
+    console.log('Video playing event fired');
     setIsCameraReady(true);
+    setVideoStatus('Camera active');
   };
 
   const handleCapture = async () => {
@@ -65,6 +113,17 @@ export function CameraView({ onImageCapture }: CameraViewProps) {
 
   const triggerFileUpload = () => {
     fileInputRef.current?.click();
+  };
+
+  // Force play function for iOS devices
+  const forcePlayVideo = () => {
+    const video = videoRef.current;
+    if (video) {
+      console.log('Attempting to force play video...');
+      video.play()
+        .then(() => console.log('Video play succeeded'))
+        .catch(err => console.error('Error playing video:', err));
+    }
   };
 
   return (
@@ -123,9 +182,19 @@ export function CameraView({ onImageCapture }: CameraViewProps) {
                   autoPlay
                   playsInline
                   muted
+                  controls={false}
+                  disablePictureInPicture
+                  disableRemotePlayback
                   className="w-full h-full object-cover"
                   onCanPlay={handleVideoReady}
+                  onPlaying={handleVideoPlaying}
+                  style={{ transform: 'scaleX(-1)' }} // Mirror for selfie mode
                 />
+                
+                <div className="absolute bottom-2 left-2 text-xs bg-black/50 text-white px-2 py-1 rounded">
+                  {videoStatus}
+                </div>
+                
                 {/* Overlay for focusing area */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="border-2 border-dashed border-white rounded-full w-32 h-32 opacity-60" />
@@ -137,9 +206,9 @@ export function CameraView({ onImageCapture }: CameraViewProps) {
                   className="w-full" 
                   size="lg"
                   disabled={!isCameraReady}
-                  onClick={handleCapture}
+                  onClick={isCameraReady ? handleCapture : forcePlayVideo}
                 >
-                  {isCameraReady ? 'Capture Image' : 'Waiting for camera...'}
+                  {isCameraReady ? 'Capture Image' : 'Tap to Activate Camera'}
                 </Button>
                 
                 <p className="text-xs text-center text-gray-500 my-1">or</p>
