@@ -1,13 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { PredictionResult } from '@/components/PredictionResult';
 import { useMoleStore } from '@/lib/store';
 import { formatDistanceToNow } from 'date-fns';
 
-export default function RecordPage() {
+function RecordPageContent() {
   const params = useParams();
   const router = useRouter();
   const { getMole } = useMoleStore();
@@ -23,7 +24,7 @@ export default function RecordPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <h1 className="text-xl font-semibold mb-4">Record not found</h1>
-        <p className="text-gray-600 mb-6">The record you're looking for doesn't exist or has been removed.</p>
+        <p className="text-gray-600 mb-6">The record you&apos;re looking for doesn&apos;t exist or has been removed.</p>
         <Button onClick={() => router.push('/')}>
           Back to Home
         </Button>
@@ -48,11 +49,14 @@ export default function RecordPage() {
         </div>
         
         <div className="w-full aspect-[4/3] bg-black rounded-lg mb-6 overflow-hidden">
-          <img 
-            src={record.image} 
-            alt="Mole" 
-            className="w-full h-full object-cover"
-          />
+          <div className="relative w-full h-full">
+            <Image 
+              src={record.image} 
+              alt="Mole" 
+              fill
+              className="object-cover"
+            />
+          </div>
         </div>
         
         <PredictionResult
@@ -62,5 +66,13 @@ export default function RecordPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function RecordPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading...</div>}>
+      <RecordPageContent />
+    </Suspense>
   );
 } 

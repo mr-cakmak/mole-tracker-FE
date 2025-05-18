@@ -1,14 +1,10 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { Button } from '@/components/ui/button';
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { useMoleStore, type MoleLocation, type Mole } from '@/lib/store';
+import { useMoleStore, type Mole } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 
 // Use a single body image
@@ -92,16 +88,20 @@ export function HumanBodyViewer() {
                 }}
               >
                 <div className="relative" onClick={handleBodyClick} style={{ width: '100%', maxHeight: '60vh' }}>
-                  <img 
-                    src={BODY_IMAGE}
-                    alt="Human body"
-                    className="mx-auto object-contain max-h-[60vh] w-auto"
-                    onError={(e) => {
-                      // If image fails to load, display a backup silhouette or message
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjFmMWYxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0cHgiIGZpbGw9IiM3NTc1NzUiPkh1bWFuIEJvZHkgT3V0bGluZTwvdGV4dD48L3N2Zz4=';
-                    }}
-                  />
+                  <div className="relative w-full h-full min-h-[300px]">
+                    <Image 
+                      src={BODY_IMAGE}
+                      alt="Human body"
+                      className="object-contain"
+                      fill
+                      onError={(e) => {
+                        // If image fails to load, display a backup silhouette or message
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjFmMWYxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0cHgiIGZpbGw9IiM3NTc1NzUiPkh1bWFuIEJvZHkgT3V0bGluZTwvdGV4dD48L3N2Zz4=';
+                      }}
+                    />
+                  </div>
                   
                   {/* Display existing moles */}
                   {moles.map((mole) => (
