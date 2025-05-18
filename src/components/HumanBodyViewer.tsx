@@ -13,8 +13,8 @@ const BODY_IMAGE = '/body.png';
 // Mole size configuration
 const MOLE_CONFIG = {
   normal: {
-    size: 0.7, // in rem
-    color: 'bg-blue-500',
+    size: 0.6, // in rem
+    color: 'bg-green-500',
   },
   selected: {
     size: 0.5, // in rem

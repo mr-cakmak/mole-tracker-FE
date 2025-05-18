@@ -50,9 +50,6 @@ function MoleProcessContent() {
         </div>
         
         <div className="mb-6">
-          <p className="text-gray-600 mb-2">
-            Location: {mole.location.x.toFixed(1)}%, {mole.location.y.toFixed(1)}%
-          </p>
           <p className="text-gray-600 mb-4">
             Records: {mole.records.length}
           </p>

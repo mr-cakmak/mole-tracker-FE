@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import { MoleRecord as MoleRecordType } from '@/lib/store';
 import { getPredictionLabel, isConfident } from '@/lib/api';
 import Image from 'next/image';
@@ -35,7 +35,9 @@ export function MoleRecord({ record, onClick }: MoleRecordProps) {
   };
   
   const statusColor = getStatusColor();
-  const dateFormatted = formatDistanceToNow(new Date(record.date), { addSuffix: true });
+  const recordDate = new Date(record.date);
+  const dateRelative = formatDistanceToNow(recordDate, { addSuffix: true });
+  const dateFormatted = format(recordDate, 'MMM d, yyyy');
   
   return (
     <Card 
@@ -57,7 +59,11 @@ export function MoleRecord({ record, onClick }: MoleRecordProps) {
           
           <div className="flex flex-col justify-between py-1 flex-1">
             <div>
-              <div className="text-sm text-gray-500">{dateFormatted}</div>
+              <div className="text-sm text-gray-500">
+                <time dateTime={record.date} title={format(recordDate, 'PPpp')}>
+                  {dateFormatted} ({dateRelative})
+                </time>
+              </div>
               <div className={`mt-1 inline-block px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}>
                 {confident ? predictionLabel : 'Not confident'}
               </div>

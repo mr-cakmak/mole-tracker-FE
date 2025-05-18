@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Camera } from 'lucide-react';
+import { Loader2, Camera, FlipHorizontal } from 'lucide-react';
 
 interface SimpleCameraProps {
   onCapture: (imageData: string) => void;
@@ -14,54 +14,92 @@ export function SimpleCamera({ onCapture }: SimpleCameraProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [isFrontCamera, setIsFrontCamera] = useState(true);
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  
+  // Store stream in ref to avoid circular dependencies
+  useEffect(() => {
+    streamRef.current = stream;
+  }, [stream]);
+
+  const setupCamera = useCallback(async (useFrontCamera = true) => {
+    try {
+      setLoading(true);
+      setError(null);
+      setReady(false);
+      
+      console.log(`SimpleCamera: Setting up ${useFrontCamera ? 'front' : 'back'} camera`);
+      
+      // Stop any existing stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera API not supported');
+      }
+      
+      // Get device list to check if we have multiple cameras
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cameras = devices.filter(device => device.kind === 'videoinput');
+        setVideoDevices(cameras);
+        console.log(`SimpleCamera: Found ${cameras.length} cameras`);
+        cameras.forEach((camera, i) => {
+          console.log(`Camera ${i+1}: ${camera.label || 'unlabeled'}`);
+        });
+      } catch (err) {
+        console.warn('Could not enumerate video devices', err);
+      }
+      
+      // Setup camera with appropriate facing mode
+      const constraints: MediaStreamConstraints = {
+        video: {
+          facingMode: useFrontCamera ? 'user' : 'environment'
+        },
+        audio: false
+      };
+      
+      console.log('Using constraints:', JSON.stringify(constraints));
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      
+      setStream(mediaStream);
+      setIsFrontCamera(useFrontCamera);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+        
+        // Setup manual play
+        try {
+          await videoRef.current.play();
+          console.log('Auto-play succeeded');
+        } catch (e) {
+          console.log('Auto-play failed, will need manual click', e);
+        }
+      }
+      
+      setLoading(false);
+    } catch (err) {
+      console.error('SimpleCamera: Failed to setup camera', err);
+      setError('Camera setup failed');
+      setLoading(false);
+    }
+  }, []); // Remove stream from dependencies to avoid circular dependency
 
   useEffect(() => {
-    async function setupCamera() {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        console.log('SimpleCamera: Setting up camera');
-        
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error('Camera API not supported');
-        }
-        
-        // Basic video with minimal constraints
-        const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-          video: true, 
-          audio: false 
-        });
-        
-        setStream(mediaStream);
-        
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-          
-          // Setup manual play
-          await videoRef.current.play().catch(e => {
-            console.log('Auto-play failed, will need manual click', e);
-          });
-        }
-        
-        setLoading(false);
-      } catch (err) {
-        console.error('SimpleCamera: Failed to setup camera', err);
-        setError('Camera setup failed');
-        setLoading(false);
-      }
-    }
-    
-    setupCamera();
+    // Only set up the camera once on mount
+    setupCamera(true);
     
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      // Clean up on unmount
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [setupCamera]); // Only depend on setupCamera, not stream
   
-  // Check if video has dimensions
+  // Check if video has dimensions, but don't depend on stream to avoid re-runs
   useEffect(() => {
     const checkVideoReady = () => {
       if (videoRef.current && videoRef.current.videoWidth > 0) {
@@ -84,7 +122,7 @@ export function SimpleCamera({ onCapture }: SimpleCameraProps) {
         clearInterval(interval);
       };
     }
-  }, []);
+  }, []); // Remove stream dependency to avoid re-running this effect when stream changes
   
   const handleManualPlay = () => {
     if (videoRef.current) {
@@ -117,6 +155,13 @@ export function SimpleCamera({ onCapture }: SimpleCameraProps) {
       setError('Failed to capture image');
     }
   };
+  
+  const switchCamera = () => {
+    setupCamera(!isFrontCamera);
+  };
+
+  // Only show camera switch button if there are multiple cameras
+  const showCameraSwitch = videoDevices.length > 1;
 
   return (
     <div className="flex flex-col items-center w-full">
@@ -149,8 +194,20 @@ export function SimpleCamera({ onCapture }: SimpleCameraProps) {
           playsInline
           muted
           className="w-full h-full object-cover"
-          style={{ transform: 'scaleX(-1)' }}
+          style={{ transform: isFrontCamera ? 'scaleX(-1)' : 'none' }}
         />
+        
+        {/* Camera switch button */}
+        {showCameraSwitch && !loading && !error && (
+          <Button
+            size="icon"
+            variant="outline"
+            className="absolute top-2 right-2 bg-black/30 border-white/50 text-white hover:bg-black/50"
+            onClick={switchCamera}
+          >
+            <FlipHorizontal className="h-5 w-5" />
+          </Button>
+        )}
         
         {/* Focus target */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
