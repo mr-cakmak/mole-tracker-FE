@@ -1,12 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { MoleRecord } from '@/components/MoleRecord';
 import { useMoleStore } from '@/lib/store';
 
-export default function MoleProcessPage() {
+function MoleProcessContent() {
   const params = useParams();
   const router = useRouter();
   const { getMole } = useMoleStore();
@@ -80,5 +80,13 @@ export default function MoleProcessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MoleProcessPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-[60vh]">Loading...</div>}>
+      <MoleProcessContent />
+    </Suspense>
   );
 } 

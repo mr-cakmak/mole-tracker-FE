@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { useMoleStore, type Mole, type MoleRecord } from '@/lib/store';
 import { toast } from 'sonner';
 import Image from 'next/image';
 
-export default function AddMolePage() {
+function AddMoleContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { addMole, addMoleRecord, getMoleByLocation } = useMoleStore();
@@ -177,5 +177,13 @@ export default function AddMolePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AddMolePage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-[60vh]">Loading...</div>}>
+      <AddMoleContent />
+    </Suspense>
   );
 } 

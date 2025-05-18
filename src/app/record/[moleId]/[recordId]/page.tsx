@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { PredictionResult } from '@/components/PredictionResult';
@@ -8,7 +8,7 @@ import { useMoleStore } from '@/lib/store';
 import { formatDistanceToNow } from 'date-fns';
 import Image from 'next/image';
 
-export default function RecordPage() {
+function RecordContent() {
   const params = useParams();
   const router = useRouter();
   const { getMole } = useMoleStore();
@@ -66,5 +66,13 @@ export default function RecordPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function RecordPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-[60vh]">Loading...</div>}>
+      <RecordContent />
+    </Suspense>
   );
 } 
