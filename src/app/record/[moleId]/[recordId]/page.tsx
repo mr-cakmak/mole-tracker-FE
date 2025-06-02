@@ -36,7 +36,7 @@ function RecordContent() {
   
   return (
     <div className="flex flex-col items-center">
-      <div className="max-w-md w-full">
+      <div className="w-full max-w-6xl px-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Mole Record</h1>
           <Button variant="outline" onClick={() => router.push(`/process/${moleId}`)}>
@@ -48,22 +48,33 @@ function RecordContent() {
           <p className="text-gray-600 mb-4">Date: {dateFormatted}</p>
         </div>
         
-        <div className="w-full aspect-[4/3] bg-black rounded-lg mb-6 overflow-hidden">
-          <Image 
-            src={record.image} 
-            alt="Mole" 
-            className="w-full h-full object-cover"
-            width={400}
-            height={300}
-            unoptimized
-          />
+        {/* Responsive layout: stacked on mobile, side by side on desktop */}
+        <div className="flex flex-col md:flex-row gap-6 md:items-stretch">
+          {/* Image section */}
+          <div className="w-full md:w-1/2">
+            <div className="w-full aspect-[4/3] bg-black rounded-lg overflow-hidden">
+              <Image 
+                src={record.image} 
+                alt="Mole" 
+                className="w-full h-full object-cover"
+                width={400}
+                height={300}
+                unoptimized
+              />
+            </div>
+          </div>
+          
+          {/* Prediction section */}
+          <div className="w-full md:w-1/2">
+            <div className="h-full">
+              <PredictionResult
+                prediction={record.prediction}
+                maxConfidence={record.maxConfidence}
+                probabilities={record.probabilities}
+              />
+            </div>
+          </div>
         </div>
-        
-        <PredictionResult
-          prediction={record.prediction}
-          maxConfidence={record.maxConfidence}
-          probabilities={record.probabilities}
-        />
       </div>
     </div>
   );

@@ -27,6 +27,32 @@ export const isConfident = (maxConfidence: number): boolean => {
   return maxConfidence >= 0.5;
 };
 
+export const compressImage = (base64String: string, quality: number = 0.7, maxWidth: number = 800): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Calculate new dimensions
+      let { width, height } = img;
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Draw and compress
+      ctx?.drawImage(img, 0, 0, width, height);
+      const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+      resolve(compressedBase64);
+    };
+    img.src = base64String;
+  });
+};
+
 export const getPrediction = async (imageBase64: string): Promise<PredictionResponse> => {
   try {
     // Remove data URL prefix if it exists

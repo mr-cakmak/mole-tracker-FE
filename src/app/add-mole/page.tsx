@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Button } from '@/components/ui/button';
 import { CameraView } from '@/components/CameraView';
 import { PredictionResult } from '@/components/PredictionResult';
-import { getPrediction } from '@/lib/api';
+import { getPrediction, compressImage } from '@/lib/api';
 import { useMoleStore, type Mole, type MoleRecord } from '@/lib/store';
 import { toast } from 'sonner';
 import Image from 'next/image';
@@ -28,6 +28,7 @@ function AddMoleContent() {
   const x = parseFloat(searchParams.get('x') || '0');
   const y = parseFloat(searchParams.get('y') || '0');
   const moleId = searchParams.get('moleId');
+  const returnTo = searchParams.get('returnTo');
   
   // Check if there's already a mole at this location
   const existingMole = moleId || (getMoleByLocation(x, y, 3)?.id);
@@ -52,16 +53,19 @@ function AddMoleContent() {
     }
   };
   
-  const handleAddMole = () => {
+  const handleAddMole = async () => {
     if (!capturedImage || !prediction) return;
     
     try {
+      // Compress the image before storing
+      const compressedImage = await compressImage(capturedImage, 0.7, 800);
+      
       const date = new Date().toISOString();
       const recordId = uuidv4();
       
       const moleRecord: MoleRecord = {
         id: recordId,
-        image: capturedImage,
+        image: compressedImage,
         date,
         prediction: prediction.prediction,
         maxConfidence: prediction.maxConfidence,
@@ -72,7 +76,13 @@ function AddMoleContent() {
         // Add record to existing mole
         addMoleRecord(existingMole, moleRecord);
         toast.success('New record added to existing mole');
-        router.push(`/process/${existingMole}`);
+        
+        // Navigate based on returnTo parameter
+        if (returnTo === 'home') {
+          router.push('/');
+        } else {
+          router.push(`/process/${existingMole}`);
+        }
       } else {
         // Create new mole
         const newMoleId = uuidv4();
@@ -85,11 +95,21 @@ function AddMoleContent() {
         
         addMole(newMole);
         toast.success('New mole added successfully');
-        router.push(`/process/${newMoleId}`);
+        
+        // Navigate based on returnTo parameter
+        if (returnTo === 'home') {
+          router.push('/');
+        } else {
+          router.push(`/process/${newMoleId}`);
+        }
       }
     } catch (error) {
       console.error('Error saving mole:', error);
-      toast.error('Failed to save mole. Please try again.');
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        toast.error('Storage is full. Some old records may have been removed to make space.');
+      } else {
+        toast.error('Failed to save mole. Please try again.');
+      }
     }
   };
   

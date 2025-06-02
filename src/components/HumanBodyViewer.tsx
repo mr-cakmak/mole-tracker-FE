@@ -5,6 +5,8 @@ import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { Button } from '@/components/ui/button';
 import { useMoleStore, type Mole } from '@/lib/store';
 import { useRouter } from 'next/navigation';
+import { MoleRecord } from '@/components/MoleRecord';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 
 // Use a single body image
@@ -24,9 +26,10 @@ const MOLE_CONFIG = {
 
 export function HumanBodyViewer() {
   const router = useRouter();
-  const { moles, getMoleByLocation } = useMoleStore();
+  const { moles, getMole, getMoleByLocation } = useMoleStore();
   const [selectedPoint, setSelectedPoint] = useState<{ x: number; y: number } | null>(null);
   const [selectedMole, setSelectedMole] = useState<Mole | null>(null);
+  const [currentMoleIndex, setCurrentMoleIndex] = useState(0);
   
   const handleBodyClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -38,26 +41,212 @@ export function HumanBodyViewer() {
     
     if (existingMole) {
       setSelectedMole(existingMole);
+      // Find the index of this mole in the moles array
+      const moleIndex = moles.findIndex(m => m.id === existingMole.id);
+      if (moleIndex !== -1) {
+        setCurrentMoleIndex(moleIndex);
+      }
     } else {
       setSelectedMole(null);
     }
     
     setSelectedPoint({ x, y });
-  }, [getMoleByLocation]);
+  }, [getMoleByLocation, moles]);
   
   const navigateToAddMole = useCallback(() => {
     if (selectedPoint) {
-      router.push(`/add-mole?x=${selectedPoint.x}&y=${selectedPoint.y}`);
+      router.push(`/add-mole?x=${selectedPoint.x}&y=${selectedPoint.y}&returnTo=home`);
     }
   }, [router, selectedPoint]);
   
-  const navigateToMoleProcess = useCallback((moleId: string) => {
-    router.push(`/process/${moleId}`);
+  const handleViewRecord = useCallback((moleId: string, recordId: string) => {
+    router.push(`/record/${moleId}/${recordId}`);
   }, [router]);
   
+  const handleAddRecord = useCallback((moleId: string) => {
+    router.push(`/add-mole?moleId=${moleId}&returnTo=home`);
+  }, [router]);
+  
+  const navigateToPrevMole = useCallback(() => {
+    if (moles.length > 0) {
+      const newIndex = currentMoleIndex > 0 ? currentMoleIndex - 1 : moles.length - 1;
+      setCurrentMoleIndex(newIndex);
+      setSelectedMole(moles[newIndex]);
+      setSelectedPoint(moles[newIndex].location);
+    }
+  }, [moles, currentMoleIndex]);
+  
+  const navigateToNextMole = useCallback(() => {
+    if (moles.length > 0) {
+      const newIndex = currentMoleIndex < moles.length - 1 ? currentMoleIndex + 1 : 0;
+      setCurrentMoleIndex(newIndex);
+      setSelectedMole(moles[newIndex]);
+      setSelectedPoint(moles[newIndex].location);
+    }
+  }, [moles, currentMoleIndex]);
+  
+  const clearSelection = useCallback(() => {
+    setSelectedPoint(null);
+    setSelectedMole(null);
+  }, []);
+  
+  // Get current mole for left panel
+  const currentMole = moles.length > 0 ? moles[currentMoleIndex] : null;
+  
+  // Sort records for current mole
+  const sortedRecords = currentMole ? [...currentMole.records].sort((a, b) => {
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  }) : [];
+  
+  const renderLeftPanel = () => {
+    if (moles.length === 0) {
+      // No moles exist
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-center p-6">
+          <h3 className="text-lg font-semibold mb-4">No Moles Added Yet</h3>
+          <p className="text-gray-600 mb-6">
+            Add a mole by clicking a point on the body
+          </p>
+          {selectedPoint && !selectedMole && (
+            <div className="w-full bg-white rounded-lg shadow-lg p-4 border">
+              <div className="flex flex-col gap-2">
+                <h3 className="font-semibold">New Point Selected</h3>
+                <p className="text-sm text-gray-500 mb-2">
+                  Would you like to add a mole at this location?
+                </p>
+                <Button 
+                  variant="default"
+                  onClick={navigateToAddMole}
+                >
+                  Add a New Mole
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+    // If a point is selected but it's not an existing mole, show only the add mole box
+    if (selectedPoint && !selectedMole) {
+      return (
+        <div className="flex flex-col h-full">
+          {/* Header with back button */}
+          <div className="flex items-center justify-between p-4 border-b">
+            <Button
+              variant="outline"
+              onClick={clearSelection}
+            >
+              Turn to Mole List
+            </Button>
+          </div>
+          
+          {/* Add mole content */}
+          <div className="flex flex-col items-center justify-center flex-1 text-center p-6">
+            <div className="w-full bg-white rounded-lg shadow-lg p-4 border">
+              <div className="flex flex-col gap-2">
+                <h3 className="font-semibold">New Point Selected</h3>
+                <p className="text-sm text-gray-500 mb-2">
+                  Would you like to add a mole at this location?
+                </p>
+                <Button 
+                  variant="default"
+                  onClick={navigateToAddMole}
+                >
+                  Add a New Mole
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Moles exist - show navigation and current mole details
+    return (
+      <div className="flex flex-col h-full">
+        {/* Navigation Header */}
+        <div className="flex items-center justify-between p-4 border-b">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={navigateToPrevMole}
+            disabled={moles.length <= 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <div className="text-center">
+            <h3 className="font-semibold">Mole {currentMoleIndex + 1} of {moles.length}</h3>
+            <p className="text-sm text-gray-500">
+              {currentMole?.records.length || 0} records
+            </p>
+          </div>
+          
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={navigateToNextMole}
+            disabled={moles.length <= 1}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* Mole Details - Desktop only */}
+        <div className="hidden md:flex md:flex-col md:flex-1 p-4 overflow-y-auto">
+          {currentMole && (
+            <>
+              <div className="mb-4">
+                <Button 
+                  className="w-full" 
+                  onClick={() => handleAddRecord(currentMole.id)}
+                >
+                  Add New Record
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                {sortedRecords.length > 0 ? (
+                  sortedRecords.map((record) => (
+                    <MoleRecord
+                      key={record.id}
+                      record={record}
+                      onClick={() => handleViewRecord(currentMole.id, record.id)}
+                    />
+                  ))
+                ) : (
+                  <p className="text-center text-gray-500 py-8">No records found</p>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+        
+        {/* Mobile - Navigate to Process Page */}
+        <div className="md:hidden p-4">
+          {currentMole && (
+            <Button 
+              className="w-full"
+              onClick={() => router.push(`/process/${currentMole.id}`)}
+            >
+              View Mole Details
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  };
+  
   return (
-    <div className="w-full flex flex-col items-center gap-4">
-      <div className="w-full max-w-md border rounded-lg overflow-hidden bg-white relative" style={{ height: 'fit-content' }}>
+    <div className="w-full flex flex-col md:flex-row gap-4 h-[calc(100vh-200px)]">
+      {/* Left Panel - Mole navigation or add prompt */}
+      <div className="w-full md:w-1/3 border rounded-lg overflow-hidden bg-white">
+        {renderLeftPanel()}
+      </div>
+      
+      {/* Right Panel - Human Body Viewer */}
+      <div className="w-full md:w-2/3 border rounded-lg overflow-hidden bg-white relative">
         <TransformWrapper
           initialScale={1}
           minScale={0.5}
@@ -81,23 +270,22 @@ export function HumanBodyViewer() {
               <TransformComponent
                 wrapperStyle={{
                   width: '100%',
-                  maxHeight: '60vh',
+                  height: '100%',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center'
                 }}
               >
-                <div className="relative" onClick={handleBodyClick} style={{ width: '100%', maxHeight: '60vh' }}>
+                <div className="relative" onClick={handleBodyClick} style={{ width: '100%', height: '100%' }}>
                   <Image 
                     src={BODY_IMAGE}
                     alt="Human body"
-                    className="mx-auto object-contain max-h-[60vh] w-auto"
+                    className="mx-auto object-contain h-full w-auto"
                     width={400}
                     height={600}
                     priority
                     unoptimized
                     onError={(e) => {
-                      // If image fails to load, display a backup silhouette or message
                       console.error('Failed to load body image');
                       e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjFmMWYxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0cHgiIGZpbGw9IiM3NTc1NzUiPkh1bWFuIEJvZHkgT3V0bGluZTwvdGV4dD48L3N2Zz4=';
                     }}
@@ -107,18 +295,22 @@ export function HumanBodyViewer() {
                   {moles.map((mole) => (
                     <div
                       key={mole.id}
-                      className={`absolute rounded-full ${MOLE_CONFIG.normal.color} transform -translate-x-1/2 -translate-y-1/2 cursor-pointer`}
+                      className={`absolute rounded-full ${
+                        selectedMole?.id === mole.id ? MOLE_CONFIG.selected.color : MOLE_CONFIG.normal.color
+                      } transform -translate-x-1/2 -translate-y-1/2 cursor-pointer ${
+                        selectedMole?.id === mole.id ? 'border-2 border-white' : ''
+                      }`}
                       style={{
                         left: `${mole.location.x}%`,
                         top: `${mole.location.y}%`,
-                        width: `${MOLE_CONFIG.normal.size}rem`,
-                        height: `${MOLE_CONFIG.normal.size}rem`,
+                        width: `${selectedMole?.id === mole.id ? MOLE_CONFIG.selected.size : MOLE_CONFIG.normal.size}rem`,
+                        height: `${selectedMole?.id === mole.id ? MOLE_CONFIG.selected.size : MOLE_CONFIG.normal.size}rem`,
                       }}
                     />
                   ))}
                   
-                  {/* Display selected point */}
-                  {selectedPoint && (
+                  {/* Display selected point for new mole */}
+                  {selectedPoint && !selectedMole && (
                     <div
                       className={`absolute rounded-full ${MOLE_CONFIG.selected.color} transform -translate-x-1/2 -translate-y-1/2 border-2 border-white z-10`}
                       style={{
@@ -135,41 +327,6 @@ export function HumanBodyViewer() {
           )}
         </TransformWrapper>
       </div>
-      
-      {/* Action popup - positioned below the body viewer */}
-      {selectedPoint && (
-        <div className="w-full max-w-md mt-4 bg-white rounded-lg shadow-lg p-4 border">
-          <div className="flex flex-col gap-2">
-            {selectedMole ? (
-              <>
-                <h3 className="font-semibold">Mole Found</h3>
-                <p className="text-sm text-gray-500 mb-2">
-                  This mole has {selectedMole.records.length} records
-                </p>
-                <Button 
-                  variant="default"
-                  onClick={() => navigateToMoleProcess(selectedMole.id)}
-                >
-                  See Progress
-                </Button>
-              </>
-            ) : (
-              <>
-                <h3 className="font-semibold">New Point Selected</h3>
-                <p className="text-sm text-gray-500 mb-2">
-                  Would you like to add a mole at this location?
-                </p>
-                <Button 
-                  variant="default"
-                  onClick={navigateToAddMole}
-                >
-                  Add a New Mole
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 } 
