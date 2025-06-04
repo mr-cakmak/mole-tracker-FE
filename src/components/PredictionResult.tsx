@@ -25,12 +25,8 @@ const CLASS_FULL_NAMES: { [key: string]: string } = {
   'SCC': 'Squamous cell carcinoma'
 };
 
-export function PredictionResult({ 
-  prediction: _prediction, 
-  maxConfidence: _maxConfidence, 
-  probabilities,
-  isLoading = false
-}: PredictionResultProps) {
+export function PredictionResult(props: PredictionResultProps) {
+  const { probabilities, isLoading = false } = props;
   const [showDetails, setShowDetails] = useState(false);
   
   if (isLoading) {
