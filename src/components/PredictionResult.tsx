@@ -139,7 +139,7 @@ export function PredictionResult({
                 </span>
               ) : (
                 <span className="font-medium text-green-700">
-                  Lower cancer risk indicated, but regular monitoring is recommended.
+                  Lower cancer risk indicated, however, it is recommended to consult a dermatologist for professional evaluation.
                 </span>
               )}
             </p>

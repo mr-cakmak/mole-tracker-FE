@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { PredictionResult } from '@/components/PredictionResult';
@@ -12,12 +12,34 @@ function RecordContent() {
   const params = useParams();
   const router = useRouter();
   const { getMole } = useMoleStore();
+  const [isMobile, setIsMobile] = useState(false);
   
   const moleId = params.moleId as string;
   const recordId = params.recordId as string;
   
   const mole = getMole(moleId);
   const record = mole?.records.find(r => r.id === recordId);
+
+  // Detect screen size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint is 768px
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  const handleBackToHistory = () => {
+    if (isMobile) {
+      // On mobile, navigate to the process page (dedicated history page)
+      router.push(`/process/${moleId}`);
+    } else {
+      // On desktop, navigate to homepage (which has embedded history)
+      router.push('/');
+    }
+  };
   
   if (!mole || !record) {
     // Handle case where record is not found
@@ -39,7 +61,7 @@ function RecordContent() {
       <div className="w-full max-w-6xl px-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Mole Record</h1>
-          <Button variant="outline" onClick={() => router.push(`/process/${moleId}`)}>
+          <Button variant="outline" onClick={handleBackToHistory}>
             Back to History
           </Button>
         </div>

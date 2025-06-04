@@ -19,7 +19,7 @@ const MOLE_CONFIG = {
     color: 'bg-green-500',
   },
   selected: {
-    size: 0.5, // in rem
+    size: 0.6, // in rem - same size as normal
     color: 'bg-blue-600',
   }
 };
@@ -298,7 +298,9 @@ export function HumanBodyViewer() {
                       className={`absolute rounded-full ${
                         selectedMole?.id === mole.id ? MOLE_CONFIG.selected.color : MOLE_CONFIG.normal.color
                       } transform -translate-x-1/2 -translate-y-1/2 cursor-pointer ${
-                        selectedMole?.id === mole.id ? 'border-2 border-white' : ''
+                        selectedMole?.id === mole.id 
+                          ? 'border-2 border-white shadow-[0_0_0_3px_rgba(59,130,246,0.5),0_0_20px_rgba(59,130,246,0.4)]' 
+                          : ''
                       }`}
                       style={{
                         left: `${mole.location.x}%`,
@@ -312,7 +314,7 @@ export function HumanBodyViewer() {
                   {/* Display selected point for new mole */}
                   {selectedPoint && !selectedMole && (
                     <div
-                      className={`absolute rounded-full ${MOLE_CONFIG.selected.color} transform -translate-x-1/2 -translate-y-1/2 border-2 border-white z-10`}
+                      className={`absolute rounded-full ${MOLE_CONFIG.selected.color} transform -translate-x-1/2 -translate-y-1/2 border-2 border-white shadow-[0_0_0_3px_rgba(59,130,246,0.5),0_0_20px_rgba(59,130,246,0.4)] z-10`}
                       style={{
                         left: `${selectedPoint.x}%`,
                         top: `${selectedPoint.y}%`,

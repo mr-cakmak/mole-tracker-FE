@@ -124,76 +124,89 @@ function AddMoleContent() {
   
   return (
     <div className="flex flex-col items-center">
-      <div className="max-w-md w-full mb-8">
-        <h1 className="text-2xl font-bold text-center mb-2">
-          {existingMole ? 'Add New Record' : 'Add New Mole'}
-        </h1>
-        <p className="text-gray-600 text-center mb-6">
-          {existingMole 
-            ? 'Take a photo to add a new record to this mole'
-            : 'Take a photo of the mole to track its condition over time'
-          }
-        </p>
+      <div className="w-full max-w-6xl px-4">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">
+            {existingMole ? 'Add New Record' : 'Add New Mole'}
+          </h1>
+          <Button variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
+        </div>
+      
         
         {capturedImage ? (
           <>
-            <div className="w-full aspect-[4/3] bg-black rounded-lg mb-4 overflow-hidden">
-              <Image 
-                src={capturedImage} 
-                alt="Captured mole" 
-                className="w-full h-full object-cover"
-                width={400}
-                height={300}
-                unoptimized
-              />
-            </div>
-            
-            <div className="flex justify-between gap-4 mb-6">
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={handleRetakePhoto}
-              >
-                Retake Photo
-              </Button>
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={handleCancel}
-              >
-                Cancel
-              </Button>
+            {/* Responsive layout: stacked on mobile, side by side on desktop */}
+            <div className="flex flex-col md:flex-row gap-6 md:items-stretch mb-6">
+              {/* Image and controls section */}
+              <div className="w-full md:w-1/2">
+                <div className="w-full aspect-[4/3] bg-black rounded-lg mb-4 overflow-hidden">
+                  <Image 
+                    src={capturedImage} 
+                    alt="Captured mole" 
+                    className="w-full h-full object-cover"
+                    width={400}
+                    height={300}
+                    unoptimized
+                  />
+                </div>
+                
+                <div className="flex justify-between gap-4 mb-4">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={handleRetakePhoto}
+                  >
+                    Retake Photo
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={handleCancel}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+                
+                {prediction && !isProcessing && (
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={handleAddMole}
+                  >
+                    {existingMole ? 'Add Record to Mole' : 'Add Mole to Track'}
+                  </Button>
+                )}
+              </div>
+              
+              {/* Analysis section */}
+              <div className="w-full md:w-1/2">
+                <div className="h-full">
+                  {isProcessing && (
+                    <PredictionResult 
+                      prediction={0}
+                      maxConfidence={0}
+                      probabilities={[]}
+                      isLoading={true}
+                    />
+                  )}
+                  
+                  {prediction && !isProcessing && (
+                    <PredictionResult 
+                      prediction={prediction.prediction}
+                      maxConfidence={prediction.maxConfidence}
+                      probabilities={prediction.probabilities}
+                    />
+                  )}
+                </div>
+              </div>
             </div>
           </>
         ) : (
-          <CameraView onImageCapture={handleImageCapture} />
-        )}
-        
-        {isProcessing && (
-          <PredictionResult 
-            prediction={0}
-            maxConfidence={0}
-            probabilities={[]}
-            isLoading={true}
-          />
-        )}
-        
-        {prediction && !isProcessing && (
-          <>
-            <PredictionResult 
-              prediction={prediction.prediction}
-              maxConfidence={prediction.maxConfidence}
-              probabilities={prediction.probabilities}
-            />
-            
-            <Button 
-              className="w-full mt-6" 
-              size="lg"
-              onClick={handleAddMole}
-            >
-              {existingMole ? 'Add Record to Mole' : 'Add Mole to Track'}
-            </Button>
-          </>
+          <div className="max-w-md mx-auto">
+            <CameraView onImageCapture={handleImageCapture} />
+          </div>
         )}
       </div>
     </div>
