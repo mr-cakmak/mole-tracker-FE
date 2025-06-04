@@ -223,15 +223,40 @@ export function HumanBodyViewer() {
           )}
         </div>
         
-        {/* Mobile - Navigate to Process Page */}
-        <div className="md:hidden p-4">
+        {/* Mobile - Show Last Record */}
+        <div className="md:hidden p-4 flex flex-col gap-4">
           {currentMole && (
-            <Button 
-              className="w-full"
-              onClick={() => router.push(`/process/${currentMole.id}`)}
-            >
-              View Mole Details
-            </Button>
+            <>
+              <div className="flex gap-2">
+                <Button 
+                  className="flex-1"
+                  onClick={() => handleAddRecord(currentMole.id)}
+                >
+                  Add New Record
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => router.push(`/process/${currentMole.id}`)}
+                >
+                  View All Records
+                </Button>
+              </div>
+              
+              {sortedRecords.length > 0 ? (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Latest Record:</h4>
+                  <MoleRecord
+                    record={sortedRecords[0]}
+                    onClick={() => handleViewRecord(currentMole.id, sortedRecords[0].id)}
+                  />
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-4">
+                  <p>No records found for this mole</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

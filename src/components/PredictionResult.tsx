@@ -26,9 +26,7 @@ const CLASS_FULL_NAMES: { [key: string]: string } = {
 };
 
 export function PredictionResult({ 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   prediction: _prediction, 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   maxConfidence: _maxConfidence, 
   probabilities,
   isLoading = false
@@ -70,12 +68,10 @@ export function PredictionResult({
   const higherRisk = cancerRisk > benignRisk ? 'cancer' : 'benign';
   
   return (
-    <Card className="w-full h-full flex flex-col gap-1">
-      <CardHeader className="pt-0 pb-2 flex-shrink-0 gap-0">
-        <CardTitle className="text-center mb-0">Analysis Result</CardTitle>
-      </CardHeader>
+    <Card className="w-full h-full flex flex-col gap-5">
+      <CardTitle className="text-center mb-0">Analysis Result</CardTitle>
       <CardContent className="p-4 flex-1 flex flex-col">
-        <div className="flex flex-col items-center flex-1 gap-0">
+        <div className="flex flex-col items-center flex-1 gap-4">
           
           {/* Main Risk Categories */}
           <div className="w-full space-y-4 mb-4 flex-shrink-0">
