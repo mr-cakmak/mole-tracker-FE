@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { getPredictionLabel, CLASS_LABELS } from '@/lib/api';
+import { CLASS_LABELS } from '@/lib/api';
 
 interface PredictionResultProps {
   prediction: number;
@@ -26,8 +26,10 @@ const CLASS_FULL_NAMES: { [key: string]: string } = {
 };
 
 export function PredictionResult({ 
-  prediction, 
-  maxConfidence, 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  prediction: _prediction, 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  maxConfidence: _maxConfidence, 
   probabilities,
   isLoading = false
 }: PredictionResultProps) {

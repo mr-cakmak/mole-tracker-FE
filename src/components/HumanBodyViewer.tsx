@@ -26,7 +26,7 @@ const MOLE_CONFIG = {
 
 export function HumanBodyViewer() {
   const router = useRouter();
-  const { moles, getMole, getMoleByLocation } = useMoleStore();
+  const { moles, getMoleByLocation } = useMoleStore();
   const [selectedPoint, setSelectedPoint] = useState<{ x: number; y: number } | null>(null);
   const [selectedMole, setSelectedMole] = useState<Mole | null>(null);
   const [currentMoleIndex, setCurrentMoleIndex] = useState(0);
